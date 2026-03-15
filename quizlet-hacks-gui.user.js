@@ -455,11 +455,14 @@
 
 
     (function makeDraggable(elem){
-        let isDown = false; let offsetX = 0, offsetY = 0;
+        let isDown = false, isTouch = false;
+        let offsetX = 0, offsetY = 0;
         const header = document.getElementById('qh-header');
+        // mouse events
         header.addEventListener('mousedown', e => {
             if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
             isDown = true;
+            isTouch = false;
             const rect = elem.getBoundingClientRect();
             if (!elem.style.left) elem.style.left = rect.left + 'px';
             if (!elem.style.top) elem.style.top = rect.top + 'px';
@@ -470,11 +473,34 @@
             e.preventDefault();
         });
         window.addEventListener('mousemove', e => {
-            if (!isDown) return;
+            if (!isDown || isTouch) return;
             elem.style.left = (e.clientX - offsetX) + 'px';
             elem.style.top = (e.clientY - offsetY) + 'px';
         });
         window.addEventListener('mouseup', ()=> isDown = false);
+
+        // Touch events for mobile
+        header.addEventListener('touchstart', e => {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            isDown = true;
+            isTouch = true;
+            const rect = elem.getBoundingClientRect();
+            const touch = e.touches[0];
+            if (!elem.style.left) elem.style.left = rect.left + 'px';
+            if (!elem.style.top) elem.style.top = rect.top + 'px';
+            elem.style.right = 'auto';
+            elem.style.bottom = 'auto';
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+            e.preventDefault();
+        }, {passive:false});
+        window.addEventListener('touchmove', e => {
+            if (!isDown || !isTouch) return;
+            const touch = e.touches[0];
+            elem.style.left = (touch.clientX - offsetX) + 'px';
+            elem.style.top = (touch.clientY - offsetY) + 'px';
+        }, {passive:false});
+        window.addEventListener('touchend', ()=> isDown = false);
     })(panel);
 
 })();
